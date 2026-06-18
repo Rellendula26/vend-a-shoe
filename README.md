@@ -1,4 +1,5 @@
 # Vend-A-Shoe
+# Project for BrainChild Engineering Internship
 
 A cloud-connected vending system that allows a user to remotely actuate physical hardware through a web application. The system integrates a Next.js frontend, Supabase command queue, Raspberry Pi control layer, and embedded hardware to create a complete end-to-end IoT workflow.
 
