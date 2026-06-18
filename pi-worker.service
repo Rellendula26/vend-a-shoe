@@ -1,0 +1,18 @@
+[Unit]
+Description=Vend-A-Shoe Pi Worker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=brainchildengineering
+WorkingDirectory=/home/brainchildengineering/Vend-A-Shoe
+Environment=SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+Environment=SUPABASE_KEY=YOUR_SUPABASE_ANON_KEY
+Environment=DEVICE_ID=vend-a-shoe-001
+ExecStart=/home/brainchildengineering/Vend-A-Shoe/.venv/bin/python /home/brainchildengineering/Vend-A-Shoe/pi_worker.py
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

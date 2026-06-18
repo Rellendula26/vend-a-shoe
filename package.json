@@ -1,0 +1,21 @@
+{
+  "name": "vend-a-shoe-controller",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.108.2",
+    "next": "^15.3.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "@types/react": "^19.0.12",
+    "typescript": "^5.8.3"
+  }
+}
