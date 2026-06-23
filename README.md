@@ -1,21 +1,20 @@
 # Vend-A-Shoe
-# Project for BrainChild Engineering Internship
 
-A cloud-connected vending system that allows a user to remotely actuate physical hardware through a web application. The system integrates a Next.js frontend, Supabase command queue, Raspberry Pi control layer, and embedded hardware to create a complete end-to-end IoT workflow.
+An autonomous cyber-physical vending platform that bridges cloud infrastructure with real-world hardware. Vend-A-Shoe enables users to remotely dispense physical inventory through a web application by orchestrating a distributed system spanning cloud databases, embedded controllers, mechanical actuation, and real-time hardware execution.
+
+Built during my Hardware Engineering Internship at BrainChild Engineering, this project explores how modern software infrastructure can reliably interact with physical devices through secure, scalable IoT architectures.
+
+---
 
 ## Overview
 
-Vend-A-Shoe demonstrates how modern web infrastructure can be connected directly to physical hardware.
+Most web applications terminate at a screen.
 
-When a user presses a button on the deployed web application:
+Vend-A-Shoe extends software into the physical world.
 
-1. A command is inserted into a Supabase database.
-2. A Raspberry Pi worker continuously polls for pending commands.
-3. The worker claims the command and executes a hardware control script.
-4. GPIO peripherals are actuated, including servo motors and LEDs.
-5. Command status is updated in the database to provide execution tracking and reliability.
+A user can remotely interact with a deployed web application to trigger real-world hardware actions. Commands are transmitted through a cloud-hosted control layer, processed by an embedded Raspberry Pi worker, and executed through electromechanical hardware including high-torque servo motors and GPIO peripherals.
 
-This architecture enables remote control of physical devices from anywhere with internet access.
+The result is a complete cloud-to-hardware pipeline capable of controlling physical devices from anywhere with internet access.
 
 ---
 
@@ -31,57 +30,125 @@ Next.js Frontend (Vercel)
 Supabase Command Queue
  │
  ▼
-Raspberry Pi Worker
+Raspberry Pi Worker Node
  │
  ▼
 GPIO Control Layer
  │
- ├── MG996R Servo
+ ├── MG996R Servo Motors
  ├── Status LEDs
- └── Future Peripheral Expansion
+ └── Future Sensor Expansion
+ │
+ ▼
+Physical Shoe Dispensing Mechanism
 ```
 
 ---
 
-## Technical Highlights
+## Engineering Scope
+
+Vend-A-Shoe required integration across four engineering domains.
+
+### Software Engineering
+
+* Full-stack web application using Next.js and TypeScript
+* Remote command generation and state management
+* Cloud-hosted deployment through Vercel
+* User-facing control dashboard
+
+### Distributed Systems
+
+* Supabase-backed command queue architecture
+* Worker-node execution model
+* Command claiming to prevent duplicate execution
+* Status tracking and fault recovery
+* Scalable cloud-to-device communication
+
+### Embedded Systems
+
+* Raspberry Pi GPIO control
+* PWM-based servo actuation
+* Hardware-safe execution sequencing
+* Python worker infrastructure
+* Real-time command processing
+
+### Mechanical Engineering
+
+* Physical dispensing mechanism design
+* Servo-driven actuation system
+* CAD-based hardware development
+* Electromechanical integration
+
+---
+
+## Key Technical Highlights
 
 ### Cloud-to-Hardware Communication
 
-Rather than exposing the Raspberry Pi directly to the internet, Vend-A-Shoe uses Supabase as an intermediary command queue.
+Rather than exposing the Raspberry Pi directly to the public internet, Vend-A-Shoe uses Supabase as an intermediary command queue.
 
-This approach provides:
+Benefits include:
 
 * Improved security
 * NAT/firewall compatibility
-* Reliable command persistence
+* Persistent command storage
 * Device state tracking
 * Scalability to multiple hardware devices
 
-### Embedded Systems Integration
+### Distributed Command Processing
 
-The Raspberry Pi interfaces directly with GPIO peripherals:
+The Raspberry Pi operates as a dedicated worker node that:
+
+1. Polls for pending commands
+2. Claims commands atomically
+3. Executes hardware actions
+4. Updates completion status
+5. Handles execution failures
+
+This architecture mirrors production job-processing systems commonly used in large-scale cloud infrastructure.
+
+### Embedded Hardware Control
+
+The system interfaces directly with GPIO peripherals including:
 
 * MG996R high-torque servo motors
 * Status LEDs
-* Future fan and sensor expansion
+* Future fan and sensor integrations
 
-Control logic is implemented in Python using:
+Servo control is implemented through PWM-based actuation while maintaining electrical isolation between high-current hardware and Raspberry Pi control signals.
 
-* gpiozero
-* PWM servo control
-* Hardware-safe movement sequencing
+---
 
-### Distributed Command Processing
+## Engineering Challenges
 
-The Raspberry Pi runs a dedicated worker process that:
+### Reliable Remote Actuation
 
-* Polls Supabase for pending commands
-* Claims commands to prevent duplicate execution
-* Executes hardware actions
-* Reports completion status
-* Handles failure states
+One of the primary challenges was creating a mechanism for remotely controlling hardware without exposing embedded devices directly to the internet.
 
-This pattern mirrors production distributed job processing systems used in large-scale cloud infrastructure.
+The final architecture uses a cloud-hosted command queue where the Raspberry Pi acts as a worker node, significantly improving security and reliability.
+
+### Servo Power Delivery
+
+MG996R servos require significantly more current than can safely be supplied through Raspberry Pi GPIO pins.
+
+To address this:
+
+* Servos are powered through an external power supply
+* GPIO pins are used exclusively for control signals
+* Grounds are shared across systems
+* Motion sequences are tuned to prevent excessive current draw
+
+### Fault Recovery and Observability
+
+Commands transition through multiple execution states:
+
+```text
+pending → running → completed
+                  ↘
+                   failed
+```
+
+This provides visibility into system behavior and allows recovery from interrupted hardware actions.
 
 ---
 
@@ -91,6 +158,7 @@ This pattern mirrors production distributed job processing systems used in large
 
 * Next.js
 * TypeScript
+* Tailwind CSS
 * Vercel
 
 ### Backend Infrastructure
@@ -108,54 +176,23 @@ This pattern mirrors production distributed job processing systems used in large
 
 ### Hardware
 
-* MG996R Servo Motor
-* LEDs
-* External Power Supply
-
----
-
-## Key Engineering Challenges
-
-### Reliable Remote Actuation
-
-One challenge was ensuring hardware commands could be executed remotely without exposing the Raspberry Pi directly to the public internet.
-
-The final solution leveraged a cloud-hosted command queue architecture where the Pi acts as a worker node rather than a public-facing server.
-
-### Servo Control and Power Delivery
-
-MG996R servos require significantly more current than can be safely supplied by Raspberry Pi GPIO pins.
-
-To address this:
-
-* Servos are powered through an external power supply
-* GPIO pins are used only for control signals
-* Grounds are shared between systems
-* Motion sequences were tuned to avoid stalling and excessive current draw
-
-### Fault Recovery
-
-The worker system tracks command execution status:
-
-* pending
-* running
-* completed
-* failed
-
-This provides observability and allows recovery from interrupted hardware actions.
+* MG996R Servo Motors
+* Status LEDs
+* External Power Distribution
 
 ---
 
 ## Future Improvements
 
-* Real-time command updates via WebSockets
+* Closed-loop servo feedback control
 * Camera-based inventory verification
-* Multiple vending lanes
+* Computer vision dispensing validation
+* Real-time updates through WebSockets
+* Multi-lane dispensing architecture
+* Mobile application support
 * Inventory database integration
-* QR code purchasing
-* Mobile application
-* Sensor feedback and closed-loop control
-* Computer vision for dispensing validation
+* QR-code purchasing workflow
+* Remote telemetry dashboard
 
 ---
 
@@ -189,8 +226,10 @@ This project combines concepts from:
 * Internet of Things (IoT)
 * Distributed Systems
 * Cloud Infrastructure
-* Web Development
+* Full-Stack Development
+* Electromechanical Design
 * Hardware Control
 * System Integration
 
-The result is a complete cloud-to-hardware pipeline capable of remotely controlling physical devices through a modern web application.
+Vend-A-Shoe demonstrates how modern cloud software can be extended beyond the browser to reliably control real-world hardware through a scalable, production-inspired architecture.
+
