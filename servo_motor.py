@@ -33,6 +33,12 @@ def sweep_servo(pwm: GPIO.PWM, start: float, end: float) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Drive a single vending servo")
     parser.add_argument("--pin", type=int, required=True, help="BCM GPIO pin number")
+    parser.add_argument(
+        "--target-duty",
+        type=float,
+        default=TARGET_DUTY_CYCLE,
+        help="Maximum duty cycle reached during dispense movement",
+    )
     args = parser.parse_args()
 
     GPIO.setmode(GPIO.BCM)
@@ -42,9 +48,9 @@ def main() -> None:
     try:
         pwm.start(HOME_DUTY_CYCLE)
         time.sleep(0.3)
-        sweep_servo(pwm, HOME_DUTY_CYCLE, TARGET_DUTY_CYCLE)
+        sweep_servo(pwm, HOME_DUTY_CYCLE, args.target_duty)
         time.sleep(SETTLE_SECONDS)
-        sweep_servo(pwm, TARGET_DUTY_CYCLE, HOME_DUTY_CYCLE)
+        sweep_servo(pwm, args.target_duty, HOME_DUTY_CYCLE)
         time.sleep(0.2)
     finally:
         pwm.stop()

@@ -16,6 +16,10 @@ BIN_TO_GPIO = {
     3: 24,
     4: 23,
 }
+BIN_TO_TARGET_DUTY = {
+    # Bin 3 was over-rotating; reduce travel to roughly ~130-140 degrees.
+    3: 10.0,
+}
 
 
 def utc_now_iso() -> str:
@@ -101,15 +105,16 @@ def parse_bin_from_action(action: str) -> int:
 
 def run_motor_for_bin(bin_number: int) -> None:
     gpio_pin = BIN_TO_GPIO[bin_number]
-    subprocess.run(
-        [
-            "python3",
-            SERVO_SCRIPT_PATH,
-            "--pin",
-            str(gpio_pin),
-        ],
-        check=True,
-    )
+    command = [
+        "python3",
+        SERVO_SCRIPT_PATH,
+        "--pin",
+        str(gpio_pin),
+    ]
+    target_duty = BIN_TO_TARGET_DUTY.get(bin_number)
+    if target_duty is not None:
+        command.extend(["--target-duty", str(target_duty)])
+    subprocess.run(command, check=True)
 
 
 def process_one(supabase: Client, device_id: str) -> None:
