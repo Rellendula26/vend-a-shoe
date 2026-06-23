@@ -1,5 +1,4 @@
 import "./globals.css";
-import { TooltipProvider } from "@/components/ui/tooltip";
 
 export default function RootLayout({
   children,
@@ -8,9 +7,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
-        <TooltipProvider>{children}</TooltipProvider>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
