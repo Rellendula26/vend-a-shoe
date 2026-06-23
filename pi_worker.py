@@ -9,10 +9,13 @@ from supabase import Client, create_client
 
 POLL_INTERVAL_SECONDS = 1
 DEFAULT_DEVICE_ID = "vend-a-shoe-001"
-SERVO_COMMAND = [
-    "python3",
-    "/home/brainchildengineering/Vend-A-Shoe/servo_big_right.py",
-]
+SERVO_SCRIPT_PATH = "/home/brainchildengineering/Vend-A-Shoe/servo_motor.py"
+BIN_TO_GPIO = {
+    1: 17,
+    2: 27,
+    3: 24,
+    4: 23,
+}
 
 
 def utc_now_iso() -> str:
@@ -82,6 +85,33 @@ def mark_failed(supabase: Client, command_id: str, error_message: str) -> None:
     )
 
 
+def parse_bin_from_action(action: str) -> int:
+    if action == "dispense":
+        return 1
+    if action.startswith("dispense_bin_"):
+        bin_value = action.removeprefix("dispense_bin_")
+        if bin_value.isdigit():
+            parsed_bin = int(bin_value)
+            if parsed_bin in BIN_TO_GPIO:
+                return parsed_bin
+    raise ValueError(
+        f"Unsupported action '{action}'. Expected 'dispense' or 'dispense_bin_1-4'."
+    )
+
+
+def run_motor_for_bin(bin_number: int) -> None:
+    gpio_pin = BIN_TO_GPIO[bin_number]
+    subprocess.run(
+        [
+            "python3",
+            SERVO_SCRIPT_PATH,
+            "--pin",
+            str(gpio_pin),
+        ],
+        check=True,
+    )
+
+
 def process_one(supabase: Client, device_id: str) -> None:
     command = fetch_oldest_pending(supabase, device_id)
     if not command:
@@ -92,9 +122,10 @@ def process_one(supabase: Client, device_id: str) -> None:
         return
 
     try:
-        subprocess.run(SERVO_COMMAND, check=True)
+        bin_number = parse_bin_from_action(command["action"])
+        run_motor_for_bin(bin_number)
         mark_completed(supabase, command_id)
-        logging.info("Completed command %s", command_id)
+        logging.info("Completed command %s for bin %s", command_id, bin_number)
     except Exception as exc:
         mark_failed(supabase, command_id, str(exc))
         logging.exception("Failed command %s", command_id)
