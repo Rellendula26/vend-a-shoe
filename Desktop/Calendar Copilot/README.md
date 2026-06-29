@@ -1,15 +1,25 @@
-# Calendar Copilot
+# Calendar Copilot (MVP Foundation)
 
-Calendar Copilot turns scheduling language in messages into event candidates that always require user approval before creation.
+Calendar Copilot is an AI scheduling layer that turns conversational scheduling signals into draft calendar events with one-click approval.
 
-## Stack
+This repository contains a production-oriented MVP foundation focused on:
 
-- Next.js App Router (web UI + API routes)
-- Tauri v2 (desktop shell, macOS-first)
-- Rust background watcher (Gmail polling + local persistence)
-- Google Gmail + Google Calendar APIs
+- Gmail ingestion (webhook contract)
+- AI event extraction (OpenAI Responses API)
+- Duplicate detection
+- User approval queue
+- Google Calendar event creation
 
-## Web Development
+## Tech Stack
+
+- Next.js (App Router)
+- TypeScript
+- Tailwind CSS
+- Supabase (optional persistent store)
+- Google Calendar API
+- OpenAI Responses API
+
+## Quick Start
 
 1. Install dependencies:
 
@@ -17,60 +27,68 @@ Calendar Copilot turns scheduling language in messages into event candidates tha
 npm install
 ```
 
-2. Configure web env vars:
+2. Copy env vars:
 
 ```bash
 cp .env.example .env.local
 ```
 
-3. Run web app:
+3. Run:
 
 ```bash
 npm run dev
 ```
 
-## Desktop Development (Tauri)
+4. Open [http://localhost:3000](http://localhost:3000)
 
-Desktop runtime uses the same frontend but runs watcher/calendar actions through Tauri commands.
+## Test Gmail Ingestion
 
-```bash
-npm run dev:desktop
-```
-
-## Desktop Build (macOS-first)
-
-Build desktop frontend payload + Tauri app:
+Send a sample webhook payload:
 
 ```bash
-npm run build:desktop
+curl -X POST http://localhost:3000/api/gmail/webhook \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id":"msg_001",
+    "threadId":"thr_001",
+    "from":"alex@example.com",
+    "to":["you@example.com"],
+    "subject":"Coffee Thursday?",
+    "body":"Hey! Want to grab coffee Thursday around 3 at Sweetwaters?",
+    "receivedAt":"2026-06-29T04:00:00.000Z"
+  }'
 ```
 
-Build a macOS `.dmg` bundle:
+Refresh the UI to see the pending suggestion and approve/ignore it.
 
-```bash
-npm run package:mac
+## Supabase Schema (Optional)
+
+If `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are set, suggestions are persisted in Supabase.
+
+```sql
+create table if not exists public.event_suggestions (
+  id text primary key,
+  message jsonb not null,
+  extracted_event jsonb not null,
+  status text not null check (status in ('pending','approved','ignored','auto_approved')),
+  created_at timestamptz not null,
+  updated_at timestamptz not null,
+  calendar_event_id text
+);
+
+alter table public.event_suggestions enable row level security;
 ```
 
-Note: local machine must have Rust toolchain + Tauri build prerequisites installed.
+Then add policies appropriate for your deployment model (service role on backend only vs end-user reads).
 
-## Key Desktop Features
+## Architecture Notes
 
-- Background watcher toggle (On/Off)
-- Configurable Gmail polling interval
-- Status panel: connected state, last checked timestamp, detected count
-- Candidate approval queue with `Create Event`, `Edit`, and `Ignore`
-- Duplicate prevention by `sourceMessageId`
-- Local persisted watcher state, processed message IDs, candidates, created-event map
-- Secure refresh token storage via OS keychain (via Rust `keyring`)
+The core architecture is intentionally modular:
 
-## OAuth Scopes Used
+- `IntegrationProvider`: normalize source-specific payloads into a common message shape
+- `EventExtractor`: AI extraction contract for scheduling data
+- `SuggestionsStore`: persistence abstraction with in-memory + Supabase implementations
+- `CalendarProvider`: event creation abstraction (Google now, others later)
+- `MessagePipeline`: orchestration for extraction -> confidence gating -> duplicate detection -> queue
 
-- `https://www.googleapis.com/auth/gmail.readonly`
-- `https://www.googleapis.com/auth/calendar.events`
-
-## Current Stubs
-
-- Slack integration: not implemented yet
-- Discord integration: not implemented yet
-
-See `INSTALLABLE_MVP.md` for full installable MVP status and remaining production steps.
+This makes Slack/Discord/Teams support additive rather than requiring rework of Gmail logic.
