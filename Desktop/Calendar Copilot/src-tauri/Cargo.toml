@@ -1,0 +1,26 @@
+[package]
+name = "calendar-copilot-desktop"
+version = "0.1.0"
+description = "Calendar Copilot desktop shell"
+authors = ["Calendar Copilot"]
+edition = "2021"
+
+[lib]
+name = "calendar_copilot_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+base64 = "0.22"
+chrono = { version = "0.4", features = ["serde"] }
+keyring = { version = "3", features = ["apple-native", "windows-native", "linux-native"] }
+regex = "1"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tauri = { version = "2", features = [] }
+tokio = { version = "1", features = ["rt-multi-thread", "time", "sync"] }
+urlencoding = "2.1"
+uuid = { version = "1", features = ["v4", "serde"] }
